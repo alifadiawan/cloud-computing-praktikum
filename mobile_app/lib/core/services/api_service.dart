@@ -21,38 +21,47 @@ class ApiService {
   ) async {
     final url = _buildUrl(path);
 
-    // Use text/plain to avoid CORS preflight (OPTIONS) request
-    // GAS still parses the body via JSON.parse(e.postData.contents)
-    var response = await http.post(
-      url,
-      headers: {"Content-Type": "text/plain"},
-      body: jsonEncode(body),
-    );
+    try {
+      // Use text/plain to avoid CORS preflight (OPTIONS) request
+      // GAS still parses the body via JSON.parse(e.postData.contents)
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "text/plain"},
+        body: jsonEncode(body),
+      );
 
-    // Google Apps Script mengembalikan 302 Redirect untuk request POST.
-    // Di Android/iOS (dart:io), package http tidak otomatis menyusul (follow) redirect 302
-    // dari POST, sehingga mengembalikan response berupa dokumen HTML.
-    // Oleh karena itu, kita perlu fetch secara manual (menggunakan GET) ke URL lokasinya.
-    if (response.statusCode == 302 || response.statusCode == 303) {
-      final location = response.headers['location'];
-      if (location != null) {
-        response = await http.get(Uri.parse(location));
+      // Coba parse respons JSON dari GAS
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        print("Gagal parse respons dari GAS (POST): ${response.body}");
+        return {"ok": false, "error": "invalid_response"};
       }
+    } catch (e) {
+      print("Error koneksi POST: $e");
+      return {"ok": false, "error": "network_error"};
     }
-
-    return jsonDecode(response.body);
   }
 
-  static Future<Map<String, dynamic>> get(
-    String path, {
-    Map<String, String> queryParams = const {},
-  }) async {
-    final url = _buildUrl(path, queryParams.isEmpty ? null : queryParams);
-    final response = await http.get(url);
-    return jsonDecode(response.body);
+  static Future<Map<String, dynamic>> get(String path) async {
+    final url = Uri.parse("${AppConfig.baseUrl}?path=$path");
+
+    try {
+      final response = await http.get(url);
+      
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        print("Gagal parse respons dari GAS (GET): ${response.body}");
+        return {"ok": false, "error": "invalid_response"};
+      }
+    } catch (e) {
+      print("Error koneksi GET: $e");
+      return {"ok": false, "error": "network_error"};
+    }
   }
 
-  // ========== PRESENCE ENDPOINTS ==========
+  // ========== PRESENCE ENDPOINTS (MODUL 1) ==========
 
   /// Check-in via QR (Mahasiswa)
   static Future<Map<String, dynamic>> checkIn({
