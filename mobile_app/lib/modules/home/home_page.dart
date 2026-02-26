@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mobile_app/modules/gps/pages/gps_map_page.dart';
 
 import '../../screens/login_page.dart';
 import '../accel/pages/accel_page.dart';
@@ -66,7 +67,7 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const GpsPage(),
+                      builder: (_) => const GpsMapPage(),
                     ),
                   );
                 },
