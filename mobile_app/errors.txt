@@ -1,0 +1,12 @@
+Analyzing mobile_app...                                         
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:100:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:115:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:146:47 - deprecated_member_use
+   info - The imported package 'mobile_scanner' isn't a dependency of the importing package - lib\screens\qr_scan_page.dart:3:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:mobile_scanner/mobile_scanner.dart' - lib\screens\qr_scan_page.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'MobileScannerController' - lib\screens\qr_scan_page.dart:18:9 - undefined_class
+  error - The method 'MobileScannerController' isn't defined for the type '_QrScanPageState' - lib\screens\qr_scan_page.dart:18:52 - undefined_method
+  error - The method 'MobileScanner' isn't defined for the type '_QrScanPageState' - lib\screens\qr_scan_page.dart:250:27 - undefined_method
+  error - The name 'Barcode' isn't a type, so it can't be used as a type argument - lib\screens\qr_scan_page.dart:253:42 - non_type_as_type_argument
+
