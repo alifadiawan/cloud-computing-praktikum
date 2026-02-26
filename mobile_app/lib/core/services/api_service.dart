@@ -5,12 +5,21 @@ import '../config/base_url.dart';
 class ApiService {
   // ========== GENERIC METHODS ==========
 
+  /// Bangun URL GAS dengan query string manual.
+  /// PENTING: Tidak pakai Uri.replace(queryParameters:) karena Dart akan
+  /// encode '/' menjadi '%2F', sehingga e.parameter.path di GAS tidak cocok.
+  static Uri _buildUrl(String path, [Map<String, String>? extras]) {
+    final buffer = StringBuffer('${AppConfig.baseUrl}?path=$path');
+    extras?.forEach((k, v) => buffer.write('&$k=$v'));
+    return Uri.parse(buffer.toString());
+  }
+
   /// POST request using text/plain to avoid CORS preflight on web
   static Future<Map<String, dynamic>> post(
     String path,
     Map<String, dynamic> body,
   ) async {
-    final url = Uri.parse("${AppConfig.baseUrl}?path=$path");
+    final url = _buildUrl(path);
 
     try {
       // Use text/plain to avoid CORS preflight (OPTIONS) request
@@ -86,19 +95,42 @@ class ApiService {
     });
   }
 
-  // ========== TELEMETRY ENDPOINTS (MODUL 2) ==========
-  // Opsional: Jika Anda memanggil API langsung dari file ini, 
-  // Anda bisa menggunakan metode di bawah ini.
-  // Namun, jika Anda menggunakan file accel_service.dart yang kita buat sebelumnya, 
-  // metode generic post() dan get() di atas saja sudah cukup.
+  // ========== GPS / TELEMETRY ENDPOINTS ==========
 
-  static Future<Map<String, dynamic>> sendAccelBatch(Map<String, dynamic> body) async {
-    return post("telemetry/accel", body);
+  static Future<Map<String, dynamic>> postGps({
+    required String deviceId,
+    required double lat,
+    required double lng,
+    required double accuracyM,
+  }) async {
+    return post(
+      "telemetry/gps", 
+      {
+        "device_id": deviceId,
+        "lat": lat,
+        "lng": lng,
+        "accuracy_m": accuracyM,
+        "ts": DateTime.now().toUtc().toIso8601String(),
+      },
+    );
   }
 
-  static Future<Map<String, dynamic>> getAccelLatest(String deviceId) async {
-    // Karena path API GAS menggunakan query parameter (?path=...), 
-    // kita gabungkan parameter device_id menggunakan simbol &
-    return get("telemetry/accel/latest&device_id=$deviceId");
+  /// Mengambil data GPS terbaru untuk Marker (GET)
+  static Future<Map<String, dynamic>> getGpsLatest(String deviceId) async {
+    return get(
+      "telemetry/gps/latest",
+      queryParams: {"device_id": deviceId},
+    );
+  }
+
+  /// Mengambil history perjalanan GPS untuk Polyline (GET)
+  static Future<Map<String, dynamic>> getGpsHistory(
+    String deviceId, {
+    int limit = 50,
+  }) async {
+    return get(
+      "telemetry/gps/history",
+      queryParams: {"device_id": deviceId, "limit": "$limit"},
+    );
   }
 }
