@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
   http: ^1.2.1
@@ -21,6 +21,9 @@ dependencies:
   geolocator: ^13.0.0
   sensors_plus: ^6.1.0 # Ditambahkan untuk accel_page.dart
   fl_chart: ^0.68.0  # Tambahkan ini untuk grafik
+
+  # TAMBAHKAN INI
+  sensors_plus: ^5.0.1
 
 dev_dependencies:
   flutter_test:
