@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'screens/login_page.dart';
+import 'modules/home/home_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,17 +11,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cloud Presence',
       debugShowCheckedModeBanner: false,
+      title: 'Cloud Monitoring App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C3CE1),
-          brightness: Brightness.light,
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        fontFamily: 'Poppins',
+        scaffoldBackgroundColor: const Color(0xFFF2F2F2),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const HomePage(),
     );
   }
 }
