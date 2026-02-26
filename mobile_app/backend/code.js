@@ -22,6 +22,19 @@ function doPost(e) {
 function doGet(e) {
   const path = e.parameter.path;
 
+  // Handle GET with data parameter (for Flutter Web / CORS workaround)
+  if (e.parameter.data) {
+    const body = JSON.parse(decodeURIComponent(e.parameter.data));
+
+    if (path === "presence/qr/generate") {
+      return handleGenerateQR(body);
+    }
+
+    if (path === "presence/checkin") {
+      return handleCheckin(body);
+    }
+  }
+
   if (path === "presence/status") {
     return handleStatus(e.parameter);
   }
