@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'modules/accel/pages/accel_page.dart';
+import 'modules/home/home_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,16 +11,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Cloud Monitoring App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-        ),
+        fontFamily: 'Poppins',
+        scaffoldBackgroundColor: const Color(0xFFF2F2F2),
         useMaterial3: true,
       ),
-
-      // 🔥 Diganti ke AccelPage
-      home: const AccelPage(),
+      home: const HomePage(),
     );
   }
 }
