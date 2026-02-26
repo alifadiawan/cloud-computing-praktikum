@@ -99,7 +99,6 @@ class _AccelPageState extends State<AccelPage> {
   Future<void> _sendBatchData() async {
     final samplesToSend = List<AccelSample>.from(_batchSamples);
     _batchSamples.clear(); 
-
     final success = await AccelService.sendBatch(_deviceId, samplesToSend);
     
     if (success && mounted) {
