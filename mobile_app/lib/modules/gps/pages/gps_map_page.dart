@@ -16,11 +16,11 @@ class _GpsMapPageState extends State<GpsMapPage> {
   final MapController _mapController = MapController();
 
   // Posisi awal (Placeholder Surabaya), nanti akan tertimpa lokasi asli
-  LatLng _latestPosition = const LatLng(-7.2575, 112.7521);
+  LatLng _latestPosition = LatLng(-7.2575, 112.7521);
   double _currentAccuracy = 0.0;
   bool _isLoadingLocation = false;
 
-  final List<LatLng> _historyPositions = const [
+  final List<LatLng> _historyPositions = [
     LatLng(-7.2570, 112.7515),
     LatLng(-7.2572, 112.7518),
     LatLng(-7.2575, 112.7521),
@@ -57,9 +57,11 @@ class _GpsMapPageState extends State<GpsMapPage> {
         throw Exception('Izin lokasi ditolak permanen. Buka pengaturan HP.');
       }
 
-      // 3. Ambil posisi saat ini
+      // 3. Ambil posisi saat ini (Diperbarui menggunakan LocationSettings)
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       setState(() {

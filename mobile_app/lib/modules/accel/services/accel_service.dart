@@ -1,8 +1,9 @@
+// lib/modules/accel/services/accel_service.dart
+
 import '../../../core/services/api_service.dart';
 import '../models/accel_sample.dart';
 
 class AccelService {
-  // 1. Mengirim batch data accelerometer
   static Future<bool> sendBatch(String deviceId, List<AccelSample> samples) async {
     final body = {
       "device_id": deviceId,
@@ -11,7 +12,6 @@ class AccelService {
     };
 
     try {
-      // Path "telemetry/accel" akan digabung oleh ApiService
       final response = await ApiService.post("telemetry/accel", body);
       return response["ok"] == true;
     } catch (e) {
@@ -20,11 +20,8 @@ class AccelService {
     }
   }
 
-  // 2. Mengambil data accelerometer terbaru
   static Future<AccelSample?> getLatest(String deviceId) async {
     try {
-      // Karena ApiService.get menggunakan format "?path=$path", 
-      // kita bisa menyisipkan parameter tambahan menggunakan "&".
       final path = "telemetry/accel/latest&device_id=$deviceId";
       final response = await ApiService.get(path);
 

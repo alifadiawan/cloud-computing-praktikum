@@ -12,26 +12,47 @@ class ApiService {
   ) async {
     final url = Uri.parse("${AppConfig.baseUrl}?path=$path");
 
-    // Use text/plain to avoid CORS preflight (OPTIONS) request
-    // GAS still parses the body via JSON.parse(e.postData.contents)
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "text/plain"},
-      body: jsonEncode(body),
-    );
+    try {
+      // Use text/plain to avoid CORS preflight (OPTIONS) request
+      // GAS still parses the body via JSON.parse(e.postData.contents)
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "text/plain"},
+        body: jsonEncode(body),
+      );
 
-    return jsonDecode(response.body);
+      // Coba parse respons JSON dari GAS
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        print("Gagal parse respons dari GAS (POST): ${response.body}");
+        return {"ok": false, "error": "invalid_response"};
+      }
+    } catch (e) {
+      print("Error koneksi POST: $e");
+      return {"ok": false, "error": "network_error"};
+    }
   }
 
   static Future<Map<String, dynamic>> get(String path) async {
     final url = Uri.parse("${AppConfig.baseUrl}?path=$path");
 
-    final response = await http.get(url);
-
-    return jsonDecode(response.body);
+    try {
+      final response = await http.get(url);
+      
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        print("Gagal parse respons dari GAS (GET): ${response.body}");
+        return {"ok": false, "error": "invalid_response"};
+      }
+    } catch (e) {
+      print("Error koneksi GET: $e");
+      return {"ok": false, "error": "network_error"};
+    }
   }
 
-  // ========== PRESENCE ENDPOINTS ==========
+  // ========== PRESENCE ENDPOINTS (MODUL 1) ==========
 
   /// Check-in via QR (Mahasiswa)
   static Future<Map<String, dynamic>> checkIn({
@@ -63,5 +84,21 @@ class ApiService {
       "dosen_id": dosenId,
       "ts": DateTime.now().toUtc().toIso8601String(),
     });
+  }
+
+  // ========== TELEMETRY ENDPOINTS (MODUL 2) ==========
+  // Opsional: Jika Anda memanggil API langsung dari file ini, 
+  // Anda bisa menggunakan metode di bawah ini.
+  // Namun, jika Anda menggunakan file accel_service.dart yang kita buat sebelumnya, 
+  // metode generic post() dan get() di atas saja sudah cukup.
+
+  static Future<Map<String, dynamic>> sendAccelBatch(Map<String, dynamic> body) async {
+    return post("telemetry/accel", body);
+  }
+
+  static Future<Map<String, dynamic>> getAccelLatest(String deviceId) async {
+    // Karena path API GAS menggunakan query parameter (?path=...), 
+    // kita gabungkan parameter device_id menggunakan simbol &
+    return get("telemetry/accel/latest&device_id=$deviceId");
   }
 }
