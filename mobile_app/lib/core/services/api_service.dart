@@ -21,21 +21,34 @@ class ApiService {
   ) async {
     final url = _buildUrl(path);
 
-    try {
-      // Use text/plain to avoid CORS preflight (OPTIONS) request
-      // GAS still parses the body via JSON.parse(e.postData.contents)
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "text/plain"},
-        body: jsonEncode(body),
-      );
+    // 1. Gunakan http.Request agar kita bisa mematikan auto-redirect
+    var request = http.Request('POST', url);
+    request.headers['Content-Type'] = 'text/plain';
+    request.body = jsonEncode(body);
+    
+    // 🔴 INI KUNCI UTAMANYA: Cegah Flutter mengikuti redirect secara otomatis
+    request.followRedirects = false; 
 
-      // Coba parse respons JSON dari GAS
+    try {
+      // 2. Kirim request POST
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      // 3. Tangkap manual 302 Redirect dari Google Apps Script
+      if (response.statusCode == 302 || response.statusCode == 303) {
+        final location = response.headers['location'];
+        if (location != null) {
+          // 4. Susul lokasi datanya menggunakan GET
+          response = await http.get(Uri.parse(location));
+        }
+      }
+
+      // 5. Kembalikan hasilnya dalam bentuk JSON
       try {
         return jsonDecode(response.body);
       } catch (e) {
         print("Gagal parse respons dari GAS (POST): ${response.body}");
-        return {"ok": false, "error": "invalid_response"};
+        return {"ok": false, "error": "invalid_json"};
       }
     } catch (e) {
       print("Error koneksi POST: $e");
@@ -43,8 +56,22 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> get(String path) async {
-    final url = Uri.parse("${AppConfig.baseUrl}?path=$path");
+  static Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, String>? queryParams, // 👈 Tambahkan parameter ini
+  }) async {
+    
+    // 1. Rangkai URL dasar beserta path-nya
+    final buffer = StringBuffer('${AppConfig.baseUrl}?path=$path');
+    
+    // 2. Jika ada queryParams (seperti device_id, limit), tambahkan ke belakang URL
+    if (queryParams != null) {
+      queryParams.forEach((key, value) {
+        buffer.write('&$key=$value');
+      });
+    }
+    
+    final url = Uri.parse(buffer.toString());
 
     try {
       final response = await http.get(url);
