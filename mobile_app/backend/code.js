@@ -16,14 +16,37 @@ function doPost(e) {
     return handleCheckin(body);
   }
 
+  // 👇 TAMBAHKAN BARIS INI UNTUK MODUL 2 POST
+  if (path === "telemetry/accel") {
+    return handlePostAccel(body);
+  }
+
   return jsonError("endpoint_not_found");
 }
 
 function doGet(e) {
   const path = e.parameter.path;
 
+  // Handle GET with data parameter (for Flutter Web / CORS workaround)
+  if (e.parameter.data) {
+    const body = JSON.parse(decodeURIComponent(e.parameter.data));
+
+    if (path === "presence/qr/generate") {
+      return handleGenerateQR(body);
+    }
+
+    if (path === "presence/checkin") {
+      return handleCheckin(body);
+    }
+  }
+
   if (path === "presence/status") {
     return handleStatus(e.parameter);
+  }
+
+  // 👇 TAMBAHKAN BARIS INI UNTUK MODUL 2 GET
+  if (path === "telemetry/accel/latest") {
+    return handleGetAccelLatest(e.parameter);
   }
 
   return jsonError("endpoint_not_found");
@@ -38,26 +61,33 @@ function handleGenerateQR(body) {
     return jsonError("missing_field");
   }
 
-  const sheet = SpreadsheetApp
-    .openById(SPREADSHEET_ID)
-    .getSheetByName("tokens");
+  const sheet =
+    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("tokens");
 
   const qrToken =
     "TKN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-  const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 menit
+  const expiresDate = new Date(Date.now() + 2 * 60 * 1000); // 2 menit
+  const expiresAt = expiresDate.toISOString(); // keep ISO for frontend use
+
+  // Format for Spreadsheet using WIB (GMT+7). Use single quote to store as raw text in sheets
+  const expiresFormatted =
+    "'" + Utilities.formatDate(expiresDate, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+  const tsFormatted =
+    "'" +
+    Utilities.formatDate(new Date(body.ts), "GMT+7", "yyyy-MM-dd HH:mm:ss");
 
   sheet.appendRow([
     qrToken,
     body.course_id,
     body.session_id,
-    expiresAt,
-    body.ts
+    expiresFormatted,
+    tsFormatted,
   ]);
 
   return jsonSuccess({
     qr_token: qrToken,
-    expires_at: expiresAt
+    expires_at: expiresAt,
   });
 }
 
@@ -66,8 +96,14 @@ function handleGenerateQR(body) {
 ========================= */
 
 function handleCheckin(body) {
-  if (!body.user_id || !body.device_id || !body.course_id ||
-      !body.session_id || !body.qr_token || !body.ts) {
+  if (
+    !body.user_id ||
+    !body.device_id ||
+    !body.course_id ||
+    !body.session_id ||
+    !body.qr_token ||
+    !body.ts
+  ) {
     return jsonError("missing_field");
   }
 
@@ -92,14 +128,27 @@ function handleCheckin(body) {
 
   const courseId = tokenRow[1];
   const sessionId = tokenRow[2];
-  const expiresAt = new Date(tokenRow[3]);
 
-  if (new Date() > expiresAt) {
+  let expiresAtStr = tokenRow[3];
+  if (expiresAtStr instanceof Date) {
+    expiresAtStr = Utilities.formatDate(
+      expiresAtStr,
+      "GMT+7",
+      "yyyy-MM-dd HH:mm:ss",
+    );
+  }
+
+  const nowStr = Utilities.formatDate(
+    new Date(),
+    "GMT+7",
+    "yyyy-MM-dd HH:mm:ss",
+  );
+
+  if (nowStr > expiresAtStr) {
     return jsonError("token_expired");
   }
 
-  if (courseId !== body.course_id ||
-      sessionId !== body.session_id) {
+  if (courseId !== body.course_id || sessionId !== body.session_id) {
     return jsonError("token_invalid");
   }
 
@@ -118,19 +167,23 @@ function handleCheckin(body) {
   const presenceId =
     "PR-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
+  const tsFormatted =
+    "'" +
+    Utilities.formatDate(new Date(body.ts), "GMT+7", "yyyy-MM-dd HH:mm:ss");
+
   presenceSheet.appendRow([
     presenceId,
     body.user_id,
     body.device_id,
     body.course_id,
     body.session_id,
-    body.ts,
-    "checked_in"
+    tsFormatted,
+    "checked_in",
   ]);
 
   return jsonSuccess({
     presence_id: presenceId,
-    status: "checked_in"
+    status: "checked_in",
   });
 }
 
@@ -143,24 +196,23 @@ function handleStatus(params) {
     return jsonError("missing_field");
   }
 
-  const sheet = SpreadsheetApp
-    .openById(SPREADSHEET_ID)
-    .getSheetByName("presence");
+  const sheet =
+    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("presence");
 
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
-      if (
-        String(data[i][1]) === String(params.user_id) &&
-        String(data[i][3]) === String(params.course_id) &&
-        String(data[i][4]) === String(params.session_id)
-      ) {
+    if (
+      String(data[i][1]) === String(params.user_id) &&
+      String(data[i][3]) === String(params.course_id) &&
+      String(data[i][4]) === String(params.session_id)
+    ) {
       return jsonSuccess({
         user_id: data[i][1],
         course_id: data[i][3],
         session_id: data[i][4],
         status: data[i][6],
-        last_ts: data[i][5]
+        last_ts: data[i][5],
       });
     }
   }
@@ -169,8 +221,22 @@ function handleStatus(params) {
     user_id: params.user_id,
     course_id: params.course_id,
     session_id: params.session_id,
-    status: "not_found"
+    status: "not_found",
   });
+}
+
+/* =========================
+   MODUL 2 STUB
+========================= */
+
+function handlePostAccel(body) {
+  // TODO: Tambahkan implementasi untuk menyimpan data accelerometer (Modul 2)
+  return jsonSuccess({ message: "telemetry received" });
+}
+
+function handleGetAccelLatest(params) {
+  // TODO: Tambahkan implementasi untuk mengambil data accelerometer (Modul 2)
+  return jsonSuccess({ x: 0, y: 0, z: 0, ts: new Date().toISOString() });
 }
 
 /* =========================
@@ -178,13 +244,13 @@ function handleStatus(params) {
 ========================= */
 
 function jsonSuccess(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, data }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(
+    JSON.stringify({ ok: true, data }),
+  ).setMimeType(ContentService.MimeType.JSON);
 }
 
 function jsonError(message) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: false, error: message }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(
+    JSON.stringify({ ok: false, error: message }),
+  ).setMimeType(ContentService.MimeType.JSON);
 }
