@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/services/api_service.dart';
+import '../../core/services/device_service.dart';
 import 'status_page.dart';
 
 class QrScanPage extends StatefulWidget {
@@ -60,9 +61,12 @@ class _QrScanPageState extends State<QrScanPage>
     }
 
     try {
+      final userId = await DeviceService.getUserId();
+      final deviceId = await DeviceService.getDeviceId();
+
       final response = await ApiService.checkIn(
-        userId: "2023xxxx",
-        deviceId: "dev-001",
+        userId: userId,
+        deviceId: deviceId,
         courseId: courseId,
         sessionId: sessionId,
         qrToken: qrToken,
