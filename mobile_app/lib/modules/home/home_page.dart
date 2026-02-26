@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../presence/pages/presence_page.dart';
+import '../../screens/login_page.dart';
 import '../accel/pages/accel_page.dart';
 import '../gps/pages/gps_page.dart';
 
@@ -17,7 +17,6 @@ class HomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
               /// ===================== ABSENSI =====================
               _buildCard(
                 context: context,
@@ -29,7 +28,7 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const PresencePage(),
+                      builder: (_) => const LoginPage(),
                     ),
                   );
                 },
@@ -123,7 +122,6 @@ class HomePage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
                   /// TEXT TITLE
                   Text(
                     title,
