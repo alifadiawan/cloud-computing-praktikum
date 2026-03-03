@@ -23,7 +23,7 @@ class DeviceService {
     final prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString(_keyDeviceId);
     if (deviceId == null) {
-      deviceId = 'DEV-${const Uuid().v4().substring(0, 8).toUpperCase()}';
+      deviceId = 'Alip-DEV-${const Uuid().v4().substring(0, 8).toUpperCase()}';
       await prefs.setString(_keyDeviceId, deviceId);
     }
     return deviceId;
