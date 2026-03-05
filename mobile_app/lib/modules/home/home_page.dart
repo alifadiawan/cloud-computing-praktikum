@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import '../../screens/login_page.dart';
 import '../accel/pages/accel_page.dart';
-import '../gps/pages/gps_page.dart';
+import '../gps/pages/gps_map_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
