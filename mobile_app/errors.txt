@@ -1,12 +1,41 @@
 Analyzing mobile_app...                                         
 
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:100:35 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:115:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:146:47 - deprecated_member_use
-   info - The imported package 'mobile_scanner' isn't a dependency of the importing package - lib\screens\qr_scan_page.dart:3:8 - depend_on_referenced_packages
-  error - Target of URI doesn't exist: 'package:mobile_scanner/mobile_scanner.dart' - lib\screens\qr_scan_page.dart:3:8 - uri_does_not_exist
-  error - Undefined class 'MobileScannerController' - lib\screens\qr_scan_page.dart:18:9 - undefined_class
-  error - The method 'MobileScannerController' isn't defined for the type '_QrScanPageState' - lib\screens\qr_scan_page.dart:18:52 - undefined_method
-  error - The method 'MobileScanner' isn't defined for the type '_QrScanPageState' - lib\screens\qr_scan_page.dart:250:27 - undefined_method
-  error - The name 'Barcode' isn't a type, so it can't be used as a type argument - lib\screens\qr_scan_page.dart:253:42 - non_type_as_type_argument
+  error - Target of URI doesn't exist: 'package:sensors_plus/sensors_plus.dart' - lib\modules\accel\pages\accel_page.dart:3:8 - uri_does_not_exist
+  error - The name 'AccelerometerEvent' isn't a type, so it can't be used as a type argument - lib\modules\accel\pages\accel_page.dart:18:22 - non_type_as_type_argument
+  error - The method 'accelerometerEventStream' isn't defined for the type '_AccelPageState' - lib\modules\accel\pages\accel_page.dart:38:28 - undefined_method
+  error - Target of URI doesn't exist: 'package:flutter_map/flutter_map.dart' - lib\modules\gps\pages\gps_map_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:latlong2/latlong.dart' - lib\modules\gps\pages\gps_map_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:geolocator/geolocator.dart' - lib\modules\gps\pages\gps_map_page.dart:4:8 - uri_does_not_exist
+  error - Undefined class 'MapController' - lib\modules\gps\pages\gps_map_page.dart:16:9 - undefined_class
+  error - The method 'MapController' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:16:40 - undefined_method
+  error - Undefined class 'LatLng' - lib\modules\gps\pages\gps_map_page.dart:19:3 - undefined_class
+  error - The name 'LatLng' isn't a class - lib\modules\gps\pages\gps_map_page.dart:19:34 - creation_with_non_type
+  error - The name 'LatLng' isn't a type, so it can't be used as a type argument - lib\modules\gps\pages\gps_map_page.dart:23:14 - non_type_as_type_argument
+  error - The method 'LatLng' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:24:5 - undefined_method
+  error - The values in a const list literal must be constants - lib\modules\gps\pages\gps_map_page.dart:24:5 - non_constant_list_element
+  error - The method 'LatLng' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:25:5 - undefined_method
+  error - The values in a const list literal must be constants - lib\modules\gps\pages\gps_map_page.dart:25:5 - non_constant_list_element
+  error - The method 'LatLng' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:26:5 - undefined_method
+  error - The values in a const list literal must be constants - lib\modules\gps\pages\gps_map_page.dart:26:5 - non_constant_list_element
+  error - Undefined name 'Geolocator' - lib\modules\gps\pages\gps_map_page.dart:42:35 - undefined_identifier
+  error - Undefined class 'LocationPermission' - lib\modules\gps\pages\gps_map_page.dart:48:7 - undefined_class
+  error - Undefined name 'Geolocator' - lib\modules\gps\pages\gps_map_page.dart:48:45 - undefined_identifier
+  error - Undefined name 'LocationPermission' - lib\modules\gps\pages\gps_map_page.dart:49:25 - undefined_identifier
+  error - Undefined name 'Geolocator' - lib\modules\gps\pages\gps_map_page.dart:50:28 - undefined_identifier
+  error - Undefined name 'LocationPermission' - lib\modules\gps\pages\gps_map_page.dart:51:27 - undefined_identifier
+  error - Undefined name 'LocationPermission' - lib\modules\gps\pages\gps_map_page.dart:56:25 - undefined_identifier
+  error - Undefined class 'Position' - lib\modules\gps\pages\gps_map_page.dart:61:7 - undefined_class
+  error - Undefined name 'Geolocator' - lib\modules\gps\pages\gps_map_page.dart:61:33 - undefined_identifier
+  error - Undefined name 'LocationAccuracy' - lib\modules\gps\pages\gps_map_page.dart:62:26 - undefined_identifier
+  error - The method 'LatLng' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:66:27 - undefined_method
+  error - The method 'FlutterMap' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:130:11 - undefined_method
+  error - The method 'MapOptions' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:132:22 - undefined_method
+  error - The method 'TileLayer' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:137:15 - undefined_method
+  error - The method 'PolylineLayer' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:141:15 - undefined_method
+  error - The method 'Polyline' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:143:19 - undefined_method
+  error - The method 'MarkerLayer' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:146:15 - undefined_method
+  error - The method 'Marker' isn't defined for the type '_GpsMapPageState' - lib\modules\gps\pages\gps_map_page.dart:148:19 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:99:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:114:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\modules\home\home_page.dart:144:47 - deprecated_member_use
 
