@@ -5,6 +5,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../models/accel_sample.dart';
 import '../services/accel_service.dart';
 
+//Trigger Contributor
+
 class AccelPage extends StatefulWidget {
   const AccelPage({super.key});
 
