@@ -160,4 +160,8 @@ class ApiService {
       queryParams: {"device_id": deviceId, "limit": "$limit"},
     );
   }
+
+    static Future<Map<String, dynamic>> getAllGps() async {
+    return get("telemetry/gps/all");
+  }
 }
