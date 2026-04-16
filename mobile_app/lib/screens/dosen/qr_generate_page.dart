@@ -388,7 +388,7 @@ class _QrGeneratePageState extends State<QrGeneratePage> {
                         Switch(
                           value: _isAutoRefresh,
                           onChanged: (val) => setState(() => _isAutoRefresh = val),
-                          activeColor: Colors.white,
+                          activeThumbColor: Colors.white,
                           activeTrackColor: const Color(0xFF10B981).withAlpha(128),
                         ),
                       ],
@@ -403,8 +403,8 @@ class _QrGeneratePageState extends State<QrGeneratePage> {
     );
   }
 
-  String _getCurrentTime() {
-    final now = DateTime.now();
-    return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
-  }
+  // String _getCurrentTime() {
+  //   final now = DateTime.now();
+  //   return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB";
+  // }
 }

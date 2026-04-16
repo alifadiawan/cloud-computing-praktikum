@@ -34,4 +34,24 @@ class AccelService {
       return null;
     }
   }
+
+  // 👇 Fungsi baru untuk grafik gelombang Admin
+  static Future<List<AccelSample>> getHistory(String deviceId, {int limit = 100}) async {
+    try {
+      final path = "telemetry/accel/history";
+      final response = await ApiService.get(path, queryParams: {
+        "device_id": deviceId,
+        "limit": limit.toString()
+      });
+
+      if (response["ok"] == true && response["data"]["items"] != null) {
+        final items = response["data"]["items"] as List;
+        return items.map((e) => AccelSample.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Error getHistory: $e");
+      return [];
+    }
+  }
 }

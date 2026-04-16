@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-// import '../models/accel_sample.dart';
 import '../services/accel_service.dart';
 
 class AccelAdminPage extends StatefulWidget {
@@ -17,9 +16,7 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
   final TextEditingController _deviceIdController = TextEditingController();
   Timer? _pollingTimer;
   bool _isMonitoring = false;
-  double _elapsedTime = 0.0;
 
-  final int _maxChartPoints = 40; 
   final List<FlSpot> _xSpots = [];
   final List<FlSpot> _ySpots = [];
   final List<FlSpot> _zSpots = [];
@@ -46,15 +43,14 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
     FocusScope.of(context).unfocus(); // Tutup keyboard
     setState(() {
       _isMonitoring = true;
-      _elapsedTime = 0.0;
       _xSpots.clear(); _ySpots.clear(); _zSpots.clear();
     });
 
-    _fetchLatestData(); 
+    _fetchHistoryData(); 
 
     // Polling setiap 5 detik
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      _fetchLatestData();
+      _fetchHistoryData();
     });
   }
 
@@ -63,18 +59,20 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
     setState(() => _isMonitoring = false);
   }
 
-  Future<void> _fetchLatestData() async {
-    final sample = await AccelService.getLatest(_deviceIdController.text.trim());
+  Future<void> _fetchHistoryData() async {
+    // Ambil 100 data terakhir sekaligus
+    final samples = await AccelService.getHistory(_deviceIdController.text.trim(), limit: 100);
     
-    if (sample != null) {
+    if (samples.isNotEmpty) {
       setState(() {
-        _elapsedTime += 5.0; // Tambah 5 detik di sumbu X
-        _xSpots.add(FlSpot(_elapsedTime, sample.x));
-        _ySpots.add(FlSpot(_elapsedTime, sample.y));
-        _zSpots.add(FlSpot(_elapsedTime, sample.z));
-
-        if (_xSpots.length > _maxChartPoints) {
-           _xSpots.removeAt(0); _ySpots.removeAt(0); _zSpots.removeAt(0);
+        _xSpots.clear(); _ySpots.clear(); _zSpots.clear();
+        
+        // Gambar ulang 100 titik menjadi gelombang
+        for (int i = 0; i < samples.length; i++) {
+          double xTime = i * 0.1; // Sumbu X berjarak 0.1 detik
+          _xSpots.add(FlSpot(xTime, samples[i].x));
+          _ySpots.add(FlSpot(xTime, samples[i].y));
+          _zSpots.add(FlSpot(xTime, samples[i].z));
         }
       });
     } else if (_xSpots.isEmpty) {
@@ -167,15 +165,10 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
   }
 
   Widget _buildChart() {
-    // Sliding Window untuk Admin
-    double minX = _xSpots.isNotEmpty ? _xSpots.first.x : 0;
-    double maxX = _xSpots.isNotEmpty ? _xSpots.last.x : 20;
-    if (maxX - minX < 20) maxX = minX + 20;
-
     return LineChart(
       LineChartData(
-        minX: minX,
-        maxX: maxX,
+        minX: 0,
+        maxX: 10, // 100 data * 0.1s = 10 detik
         minY: -15, maxY: 15,
         lineTouchData: const LineTouchData(
           enabled: true,
@@ -204,7 +197,7 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 22,
-              interval: 10, // Admin naik per 5 detik, jadi tampilkan tiap 10 detik agar rapi
+              interval: 2,
               getTitlesWidget: (value, meta) => Text("${value.toInt()}s", style: const TextStyle(color: Colors.white70, fontSize: 10)),
             ),
           ),
@@ -231,20 +224,12 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
       isCurved: true,
       curveSmoothness: 0.25,
       color: color,
-      barWidth: 3, // Lebih tebal karena data Admin lebih renggang
+      barWidth: 2.5,
       isStrokeCapRound: true,
-      dotData: FlDotData(
-        show: true, // Tampilkan titik untuk Admin
-        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-          radius: 3,
-          color: color,
-          strokeWidth: 1.5,
-          strokeColor: Colors.black, // Beri garis luar hitam agar titik sangat jelas
-        ),
-      ),
+      dotData: const FlDotData(show: false), // Titik dimatikan agar jadi gelombang halus
       belowBarData: BarAreaData(
         show: true,
-        color: color.withValues(alpha: 0.1), // Efek glow
+        color: color.withValues(alpha: 0.1),
       ),
     );
   }
