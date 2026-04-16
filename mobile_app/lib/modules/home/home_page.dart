@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 import '../../screens/login_page.dart';
-import '../accel/pages/accel_page.dart';
+// import '../accel/pages/accel_page.dart';
 import '../gps/pages/gps_map_page.dart';
+import '../accel/pages/accel_mode_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -152,7 +153,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             /// Main content with scroll
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -229,7 +231,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const AccelPage(),
+                                      builder: (_) => const AccelModePage(),
                                     ),
                                   );
                                 },
@@ -300,8 +302,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
                                   colors: [
-                                    const Color(0xFF6366F1).withValues(alpha: 0.3),
-                                    const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                    const Color(0xFF6366F1)
+                                        .withValues(alpha: 0.3),
+                                    const Color(0xFF8B5CF6)
+                                        .withValues(alpha: 0.3),
                                   ],
                                 ),
                               ),
@@ -332,7 +336,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,
                                       fontFamily: 'Poppins',
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ],
@@ -427,7 +432,8 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(36),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.backgroundColor.withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
+                    color: widget.backgroundColor
+                        .withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
                     blurRadius: 50 + (_hoverAnimation.value * 40),
                     offset: Offset(0, 20 + (_hoverAnimation.value * 15)),
                     spreadRadius: 5 + (_hoverAnimation.value * 10),
@@ -449,7 +455,8 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.15)),
+                        color: Colors.white.withValues(
+                            alpha: 0.2 + (_hoverAnimation.value * 0.15)),
                         width: 1.5,
                       ),
                     ),
@@ -491,12 +498,17 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                               height: 80,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.2)),
+                                color: Colors.white.withValues(
+                                    alpha: 0.2 + (_hoverAnimation.value * 0.2)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.15 + (_hoverAnimation.value * 0.25)),
-                                    blurRadius: 25 + (_hoverAnimation.value * 20),
-                                    spreadRadius: 5 + (_hoverAnimation.value * 8),
+                                    color: Colors.white.withValues(
+                                        alpha: 0.15 +
+                                            (_hoverAnimation.value * 0.25)),
+                                    blurRadius:
+                                        25 + (_hoverAnimation.value * 20),
+                                    spreadRadius:
+                                        5 + (_hoverAnimation.value * 8),
                                   ),
                                 ],
                               ),
@@ -566,7 +578,8 @@ class FeatureCard extends StatefulWidget {
   State<FeatureCard> createState() => _FeatureCardState();
 }
 
-class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin {
+class _FeatureCardState extends State<FeatureCard>
+    with TickerProviderStateMixin {
   late AnimationController _hoverController;
   late Animation<double> _hoverAnimation;
   bool _isHovered = false;
@@ -617,7 +630,8 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.backgroundColor.withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
+                    color: widget.backgroundColor
+                        .withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
                     blurRadius: 40 + (_hoverAnimation.value * 35),
                     offset: Offset(0, 15 + (_hoverAnimation.value * 12)),
                     spreadRadius: 3 + (_hoverAnimation.value * 8),
@@ -639,7 +653,8 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.15)),
+                        color: Colors.white.withValues(
+                            alpha: 0.2 + (_hoverAnimation.value * 0.15)),
                         width: 1.5,
                       ),
                     ),
@@ -679,12 +694,17 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                               height: 72,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.2)),
+                                color: Colors.white.withValues(
+                                    alpha: 0.2 + (_hoverAnimation.value * 0.2)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.15 + (_hoverAnimation.value * 0.25)),
-                                    blurRadius: 20 + (_hoverAnimation.value * 18),
-                                    spreadRadius: 4 + (_hoverAnimation.value * 7),
+                                    color: Colors.white.withValues(
+                                        alpha: 0.15 +
+                                            (_hoverAnimation.value * 0.25)),
+                                    blurRadius:
+                                        20 + (_hoverAnimation.value * 18),
+                                    spreadRadius:
+                                        4 + (_hoverAnimation.value * 7),
                                   ),
                                 ],
                               ),
