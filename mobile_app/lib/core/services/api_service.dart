@@ -6,91 +6,87 @@ class ApiService {
   // ========== GENERIC METHODS ==========
 
   /// Bangun URL GAS dengan query string manual.
-  /// PENTING: Tidak pakai Uri.replace(queryParameters:) karena Dart akan
-  /// encode '/' menjadi '%2F', sehingga e.parameter.path di GAS tidak cocok.
   static Uri _buildUrl(String path, [Map<String, String>? extras]) {
     final buffer = StringBuffer('${AppConfig.baseUrl}?path=$path');
     extras?.forEach((k, v) => buffer.write('&$k=$v'));
     return Uri.parse(buffer.toString());
   }
 
-  /// POST request using text/plain to avoid CORS preflight on web
+  /// POST request dengan penanganan redirect manual Google Apps Script (302)
   static Future<Map<String, dynamic>> post(
     String path,
     Map<String, dynamic> body,
   ) async {
+    // Sisipkan path ke dalam body sebagai cadangan bagi GAS
+    body["path"] = path; 
+    
     final url = _buildUrl(path);
+    
+    print("----------------------------------------");
+    print("[ApiService] SENDING POST TO: $url");
+    print("[ApiService] PAYLOAD: ${jsonEncode(body)}");
+    print("----------------------------------------");
 
-    // 1. Gunakan http.Request agar kita bisa mematikan auto-redirect
     var request = http.Request('POST', url);
     request.headers['Content-Type'] = 'text/plain';
     request.body = jsonEncode(body);
-    
-    // 🔴 INI KUNCI UTAMANYA: Cegah Flutter mengikuti redirect secara otomatis
     request.followRedirects = false; 
 
     try {
-      // 2. Kirim request POST
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // 3. Tangkap manual 302 Redirect dari Google Apps Script
+      print("[ApiService] INITIAL STATUS: ${response.statusCode}");
+
+      // Tangkap manual 302 Redirect dari Google Apps Script
       if (response.statusCode == 302 || response.statusCode == 303) {
         final location = response.headers['location'];
         if (location != null) {
-          // 4. Susul lokasi datanya menggunakan GET
+          print("[ApiService] REDIRECTING TO: $location");
+          // Perlu menggunakan GET untuk mengambil JSON dari URL redirect GAS
           response = await http.get(Uri.parse(location));
+          print("[ApiService] REDIRECT STATUS: ${response.statusCode}");
         }
       }
 
-      // 5. Kembalikan hasilnya dalam bentuk JSON
+      print("[ApiService] RESPONSE BODY: ${response.body}");
+      print("----------------------------------------");
+
       try {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        return decoded is Map<String, dynamic> ? decoded : {"ok": true, "data": decoded};
       } catch (e) {
-        print("Gagal parse respons dari GAS (POST): ${response.body}");
-        return {"ok": false, "error": "invalid_json"};
+        print("[ApiService] PARSE ERROR: ${response.body}");
+        return {"ok": false, "error": "Invalid JSON response"};
       }
     } catch (e) {
-      print("Error koneksi POST: $e");
-      return {"ok": false, "error": "network_error"};
+      print("[ApiService] FATAL ERROR: $e");
+      return {"ok": false, "error": "Connection error: $e"};
     }
   }
 
+  /// GET request
   static Future<Map<String, dynamic>> get(
     String path, {
-    Map<String, String>? queryParams, // 👈 Tambahkan parameter ini
+    Map<String, String>? queryParams,
   }) async {
-    
-    // 1. Rangkai URL dasar beserta path-nya
-    final buffer = StringBuffer('${AppConfig.baseUrl}?path=$path');
-    
-    // 2. Jika ada queryParams (seperti device_id, limit), tambahkan ke belakang URL
-    if (queryParams != null) {
-      queryParams.forEach((key, value) {
-        buffer.write('&$key=$value');
-      });
-    }
-    
-    final url = Uri.parse(buffer.toString());
+    final url = _buildUrl(path, queryParams);
+    print("[ApiService] GET: $url");
 
     try {
       final response = await http.get(url);
-      
       try {
         return jsonDecode(response.body);
       } catch (e) {
-        print("Gagal parse respons dari GAS (GET): ${response.body}");
-        return {"ok": false, "error": "invalid_response"};
+        return {"ok": false, "error": "Invalid response format"};
       }
     } catch (e) {
-      print("Error koneksi GET: $e");
-      return {"ok": false, "error": "network_error"};
+      return {"ok": false, "error": "Connection error: $e"};
     }
   }
 
-  // ========== PRESENCE ENDPOINTS (MODUL 1) ==========
+  // ========== PRESENCE ENDPOINTS ==========
 
-  /// Check-in via QR (Mahasiswa)
   static Future<Map<String, dynamic>> checkIn({
     required String userId,
     required String deviceId,
@@ -108,11 +104,10 @@ class ApiService {
     });
   }
 
-  /// Generate QR Code (Dosen)
   static Future<Map<String, dynamic>> generateQr({
     required String courseId,
     required String sessionId,
-    required String dosenId,
+    String? dosenId,
     String? customToken,
   }) async {
     return post("presence/qr/generate", {
@@ -124,46 +119,45 @@ class ApiService {
     });
   }
 
-  // ========== GPS / TELEMETRY ENDPOINTS ==========
+  // ========== TELEMETRY (GPS & ACCEL) ==========
 
   static Future<Map<String, dynamic>> postGps({
+    String? userId,
     required String deviceId,
     required double lat,
     required double lng,
-    required double accuracyM,
+    double? accuracyM,
   }) async {
-    return post(
-      "telemetry/gps", 
-      {
-        "device_id": deviceId,
-        "lat": lat,
-        "lng": lng,
-        "accuracy_m": accuracyM,
-        "ts": DateTime.now().toUtc().toIso8601String(),
-      },
-    );
+    return post("telemetry/gps", {
+      "user_id": userId,
+      "device_id": deviceId,
+      "lat": lat,
+      "lng": lng,
+      "accuracy_m": accuracyM ?? 0.0,
+      "ts": DateTime.now().toUtc().toIso8601String(),
+    });
   }
 
-  /// Mengambil data GPS terbaru untuk Marker (GET)
+  static Future<Map<String, dynamic>> postAccel({
+    required String deviceId,
+    required List<Map<String, dynamic>> samples,
+  }) async {
+    return post("telemetry/accel", {
+      "device_id": deviceId,
+      "ts": DateTime.now().toUtc().toIso8601String(),
+      "samples": samples,
+    });
+  }
+
   static Future<Map<String, dynamic>> getGpsLatest(String deviceId) async {
-    return get(
-      "telemetry/gps/latest",
-      queryParams: {"device_id": deviceId},
-    );
+    return get("telemetry/gps/latest", queryParams: {"device_id": deviceId});
   }
 
-  /// Mengambil history perjalanan GPS untuk Polyline (GET)
-  static Future<Map<String, dynamic>> getGpsHistory(
-    String deviceId, {
-    int limit = 50,
-  }) async {
-    return get(
-      "telemetry/gps/history",
-      queryParams: {"device_id": deviceId, "limit": "$limit"},
-    );
+  static Future<Map<String, dynamic>> getGpsHistory(String deviceId, {int limit = 50}) async {
+    return get("telemetry/gps/history", queryParams: {"device_id": deviceId, "limit": limit.toString()});
   }
 
-    static Future<Map<String, dynamic>> getAllGps() async {
+  static Future<Map<String, dynamic>> getAllGps() async {
     return get("telemetry/gps/all");
   }
 }

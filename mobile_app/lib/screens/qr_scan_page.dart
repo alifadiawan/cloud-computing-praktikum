@@ -17,9 +17,7 @@ class _QrScanPageState extends State<QrScanPage>
   bool isScanned = false;
   bool isFlashOn = false;
   bool isContinuousMode = false; // New state for continuous scan
-  bool isScannerReady = false;
   final MobileScannerController cameraController = MobileScannerController();
-  final TextEditingController userIdController = TextEditingController();
   late AnimationController _animController;
   late Animation<double> _animation;
 
@@ -39,21 +37,10 @@ class _QrScanPageState extends State<QrScanPage>
   void dispose() {
     _animController.dispose();
     cameraController.dispose();
-    userIdController.dispose();
     super.dispose();
   }
 
   void _handleScan(String qrRaw) async {
-    final userIdInput = userIdController.text.trim();
-    if (userIdInput.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text("Harap isi User ID / NIM terlebih dahulu sebelum Bapak/Ibu atau mahasiswa melakukan scan")),
-        );
-      }
-      return;
-    }
-
     if (isScanned) return;
     setState(() => isScanned = true);
 
@@ -75,10 +62,12 @@ class _QrScanPageState extends State<QrScanPage>
     }
 
     try {
+      // Fetch NIM and Device ID automatically
+      final userId = await DeviceService.getUserId();
       final deviceId = await DeviceService.getDeviceId();
 
       final response = await ApiService.checkIn(
-        userId: userIdInput,
+        userId: userId,
         deviceId: deviceId,
         courseId: courseId,
         sessionId: sessionId,
@@ -122,7 +111,7 @@ class _QrScanPageState extends State<QrScanPage>
             ),
           ),
         ).then((_) {
-          setState(() => isScanned = false);
+          if (mounted) setState(() => isScanned = false);
         });
       }
     } catch (e) {
@@ -145,7 +134,7 @@ class _QrScanPageState extends State<QrScanPage>
             ),
           ),
         ).then((_) {
-          setState(() => isScanned = false);
+          if (mounted) setState(() => isScanned = false);
         });
       }
     }
@@ -310,80 +299,8 @@ class _QrScanPageState extends State<QrScanPage>
 
                 const SizedBox(height: 16),
 
-                // User ID Input Field
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(26),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: userIdController,
-                      style: const TextStyle(fontSize: 16, color: Color(0xFF1F2937)),
-                      decoration: InputDecoration(
-                        icon: Icon(Icons.person_outline_rounded, color: Colors.grey.shade500),
-                        border: InputBorder.none,
-                        hintText: "user_id / nim",
-                        hintStyle: TextStyle(color: Colors.grey.shade400),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Camera Scanner Area conditionally rendered
-                if (!isScannerReady)
-                  Expanded(
-                    child: Center(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF6C3CE1),
-                          elevation: 4,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (userIdController.text.trim().isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Harap isi User ID / NIM terlebih dahulu!"),
-                              ),
-                            );
-                            return;
-                          }
-                          // Dismiss keyboard
-                          FocusScope.of(context).unfocus();
-                          setState(() => isScannerReady = true);
-                        },
-                        icon: const Icon(Icons.qr_code_scanner_rounded),
-                        label: const Text(
-                          "Mulai Scan",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  Expanded(
+                // Camera Scanner Area
+                Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: ClipRRect(
