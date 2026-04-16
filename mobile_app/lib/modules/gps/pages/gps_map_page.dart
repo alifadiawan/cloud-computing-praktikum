@@ -41,9 +41,9 @@ class _GpsMapPageState extends State<GpsMapPage> {
 
   static const int _historyLimit = 200;
 
-  // =============================
-  // WARNA SESUAI REQUEST (EMERALD GREEN)
-  // =============================
+  // 🔥 TAMBAHAN: MULTI DEVICE STATE
+  List<Map<String, dynamic>> _allDevices = [];
+
   final Color emeraldGreen = const Color(0xFF10B981);
   final Color deepEmerald = const Color(0xFF059669);
 
@@ -65,9 +65,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
     _startAutoTracking();
   }
 
-  // =============================
-  // DEVICE ID (UNIQUE + STABLE)
-  // =============================
   Future<String> _getDeviceId() async {
     try {
       final deviceInfo = DeviceInfoPlugin();
@@ -96,9 +93,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
     await _fetchGpsHistory();
   }
 
-  // =============================
-  // AUTO TRACKING
-  // =============================
   void _startAutoTracking() {
     _trackingTimer = Timer.periodic(
       const Duration(seconds: 5),
@@ -110,6 +104,10 @@ class _GpsMapPageState extends State<GpsMapPage> {
           await _postGpsData();
           await _fetchLatestGps();
           await _fetchGpsHistory();
+
+          // 🔥 TAMBAHAN: AMBIL SEMUA DEVICE
+          await _fetchAllDevices();
+
         } finally {
           _isTrackingBusy = false;
         }
@@ -117,9 +115,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
     );
   }
 
-  // =============================
-  // GET DEVICE LOCATION
-  // =============================
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
@@ -147,9 +142,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
     }
   }
 
-  // =============================
-  // GET LATEST GPS
-  // =============================
   Future<void> _fetchLatestGps() async {
     try {
       final response = await ApiService.getGpsLatest(_deviceId);
@@ -172,9 +164,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
     }
   }
 
-  // =============================
-  // GET HISTORY
-  // =============================
   Future<void> _fetchGpsHistory() async {
     try {
       final response = await ApiService.getGpsHistory(_deviceId, limit: _historyLimit);
@@ -201,25 +190,38 @@ class _GpsMapPageState extends State<GpsMapPage> {
     }
   }
 
-  // =============================
-  // POST GPS
-  // =============================
+  // 🔥 TAMBAHAN: FETCH SEMUA DEVICE
+  Future<void> _fetchAllDevices() async {
+    try {
+      final response = await ApiService.getAllGps();
+      if (!mounted) return;
+
+      if (response['ok'] == true) {
+        final items = response['data']['items'] ?? [];
+        setState(() {
+          _allDevices = List<Map<String, dynamic>>.from(items);
+        });
+      }
+    } catch (e) {
+      debugPrint("Fetch ALL GPS error: $e");
+    }
+  }
+
   Future<void> _postGpsData() async {
     try {
-      await ApiService.postGps(
+      final res = await ApiService.postGps(
         deviceId: _deviceId,
         lat: _latestPosition.latitude,
         lng: _latestPosition.longitude,
         accuracyM: _currentAccuracy,
       );
+
+      print("POST GPS RESULT: $res"); 
     } catch (e) {
       debugPrint("POST GPS error: $e");
     }
   }
 
-  // =============================
-  // UI
-  // =============================
   @override
   Widget build(BuildContext context) {
     final markerPosition = _latestServerPosition ?? _latestPosition;
@@ -239,7 +241,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
                 userAgentPackageName: "com.example.mobile_app",
               ),
               
-              // POLYLINE (Emerald Green)
               PolylineLayer(
                 polylines: [
                   if (_historyPositions.isNotEmpty)
@@ -251,28 +252,42 @@ class _GpsMapPageState extends State<GpsMapPage> {
                 ],
               ),
 
-              // MARKERS
               MarkerLayer(
                 markers: [
-                  // Marker HP (You)
                   Marker(
                     point: _latestPosition,
                     width: 40, height: 40,
                     child: Icon(Icons.person_pin_circle, color: Colors.blue.shade600, size: 35),
                   ),
-                  // Marker Server (Emerald)
+
                   if (_latestServerPosition != null)
                     Marker(
                       point: _latestServerPosition!,
                       width: 45, height: 45,
                       child: Icon(Icons.location_on, color: deepEmerald, size: 40),
                     ),
+
+                  // 🔥 TAMBAHAN: MULTI DEVICE MARKER
+                  ..._allDevices.map((device) {
+                    final lat = double.tryParse(device['lat'].toString()) ?? 0.0;
+                    final lng = double.tryParse(device['lng'].toString()) ?? 0.0;
+
+                    return Marker(
+                      point: LatLng(lat, lng),
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 35,
+                      ),
+                    );
+                  }).toList(),
                 ],
               ),
             ],
           ),
 
-          // Header Back Button
           Positioned(
             top: 50, left: 20,
             child: GestureDetector(
@@ -285,7 +300,6 @@ class _GpsMapPageState extends State<GpsMapPage> {
             ),
           ),
 
-          // PANEL KOORDINAT (Emerald Green Gradient)
           Positioned(
             bottom: 30, left: 20, right: 20,
             child: Container(
