@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
+import '../core/services/device_service.dart';
 import 'qr_scan_page.dart';
 import 'login_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String _currentNim = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNim();
+  }
+
+  Future<void> _loadNim() async {
+    final nim = await DeviceService.getUserId();
+    if (mounted) {
+      setState(() => _currentNim = nim);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,21 +69,21 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             "Selamat Datang 👋",
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            "Mahasiswa",
-                            style: TextStyle(
+                            _currentNim,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -318,16 +339,15 @@ class HomePage extends StatelessWidget {
                 pageBuilder: (_, __, ___) => const QrScanPage(),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
-                    position:
-                        Tween<Offset>(
-                          begin: const Offset(0, 1),
-                          end: Offset.zero,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          ),
-                        ),
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                     child: child,
                   );
                 },

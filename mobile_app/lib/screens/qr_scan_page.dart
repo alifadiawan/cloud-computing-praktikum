@@ -16,6 +16,7 @@ class _QrScanPageState extends State<QrScanPage>
     with SingleTickerProviderStateMixin {
   bool isScanned = false;
   bool isFlashOn = false;
+  bool isContinuousMode = false; // New state for continuous scan
   final MobileScannerController cameraController = MobileScannerController();
   late AnimationController _animController;
   late Animation<double> _animation;
@@ -74,34 +75,67 @@ class _QrScanPageState extends State<QrScanPage>
 
       if (!mounted) return;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => StatusPage(
-            success: response["ok"] == true,
-            message: response["ok"] == true
-                ? "Check-in berhasil!"
-                : (response["error"] ?? "Check-in gagal"),
-            data: response,
+      if (isContinuousMode) {
+        // Continuous mode: Show feedback and reset shortly
+        final bool success = response["ok"] == true;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? "Berhasil Check-in: $qrToken" : (response["error"] ?? "Gagal"),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-        ),
-      ).then((_) {
-        setState(() => isScanned = false);
-      });
+        );
+        
+        // Reset scanner after 2 seconds to allow next scan
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) setState(() => isScanned = false);
+        });
+      } else {
+        // Normal mode: Navigate to StatusPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StatusPage(
+              success: response["ok"] == true,
+              message: response["ok"] == true
+                  ? "Check-in berhasil!"
+                  : (response["error"] ?? "Check-in gagal"),
+              data: response,
+            ),
+          ),
+        ).then((_) {
+          setState(() => isScanned = false);
+        });
+      }
     } catch (e) {
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => StatusPage(
-            success: false,
-            message: "Terjadi kesalahan: $e",
-            data: const {},
+      if (isContinuousMode) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) setState(() => isScanned = false);
+        });
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StatusPage(
+              success: false,
+              message: "Terjadi kesalahan: $e",
+              data: const {},
+            ),
           ),
-        ),
-      ).then((_) {
-        setState(() => isScanned = false);
-      });
+        ).then((_) {
+          setState(() => isScanned = false);
+        });
+      }
     }
   }
 
@@ -172,6 +206,29 @@ class _QrScanPageState extends State<QrScanPage>
                           ],
                         ),
                       ),
+                      
+                      // Continuous Mode Toggle
+                      GestureDetector(
+                        onTap: () {
+                          setState(() => isContinuousMode = !isContinuousMode);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: isContinuousMode
+                                ? const Color(0xFF10B981).withAlpha(100)
+                                : Colors.white.withAlpha(51),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            isContinuousMode ? Icons.repeat_on_rounded : Icons.repeat_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+
                       // Flash toggle
                       GestureDetector(
                         onTap: () {

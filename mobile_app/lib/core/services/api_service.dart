@@ -113,11 +113,13 @@ class ApiService {
     required String courseId,
     required String sessionId,
     required String dosenId,
+    String? customToken,
   }) async {
     return post("presence/qr/generate", {
       "course_id": courseId,
       "session_id": sessionId,
       "dosen_id": dosenId,
+      "custom_token": customToken,
       "ts": DateTime.now().toUtc().toIso8601String(),
     });
   }
