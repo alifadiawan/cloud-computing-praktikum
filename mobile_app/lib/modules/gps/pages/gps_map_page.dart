@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -247,7 +246,7 @@ class _GpsMapPageState extends State<GpsMapPage> {
                   if (_historyPositions.isNotEmpty)
                     Polyline(
                       points: _historyPositions,
-                      color: emeraldGreen.withOpacity(0.7),
+                      color: emeraldGreen.withValues(alpha: 0.7),
                       strokeWidth: 5,
                     ),
                 ],

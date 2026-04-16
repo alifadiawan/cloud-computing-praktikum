@@ -107,8 +107,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFF6366F1).withOpacity(0.15),
-                            const Color(0xFF6366F1).withOpacity(0.03),
+                            const Color(0xFF6366F1).withValues(alpha: 0.15),
+                            const Color(0xFF6366F1).withValues(alpha: 0.03),
                             Colors.transparent,
                           ],
                         ),
@@ -137,8 +137,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFFEC4899).withOpacity(0.12),
-                            const Color(0xFFEC4899).withOpacity(0.02),
+                            const Color(0xFFEC4899).withValues(alpha: 0.12),
+                            const Color(0xFFEC4899).withValues(alpha: 0.02),
                             Colors.transparent,
                           ],
                         ),
@@ -179,7 +179,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                               fontFamily: 'Poppins',
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               letterSpacing: 0.2,
                             ),
                           ),
@@ -282,12 +282,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              const Color(0xFF1F2937).withOpacity(0.6),
-                              const Color(0xFF111827).withOpacity(0.6),
+                              const Color(0xFF1F2937).withValues(alpha: 0.6),
+                              const Color(0xFF111827).withValues(alpha: 0.6),
                             ],
                           ),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             width: 1,
                           ),
                         ),
@@ -300,8 +300,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
                                   colors: [
-                                    const Color(0xFF6366F1).withOpacity(0.3),
-                                    const Color(0xFF8B5CF6).withOpacity(0.3),
+                                    const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                    const Color(0xFF8B5CF6).withValues(alpha: 0.3),
                                   ],
                                 ),
                               ),
@@ -332,7 +332,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,
                                       fontFamily: 'Poppins',
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ],
@@ -427,7 +427,7 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(36),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.backgroundColor.withOpacity(0.4 + (_hoverAnimation.value * 0.3)),
+                    color: widget.backgroundColor.withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
                     blurRadius: 50 + (_hoverAnimation.value * 40),
                     offset: Offset(0, 20 + (_hoverAnimation.value * 15)),
                     spreadRadius: 5 + (_hoverAnimation.value * 10),
@@ -445,11 +445,11 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                         end: Alignment.bottomRight,
                         colors: [
                           widget.backgroundColor,
-                          widget.backgroundColor.withOpacity(0.75),
+                          widget.backgroundColor.withValues(alpha: 0.75),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2 + (_hoverAnimation.value * 0.15)),
+                        color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.15)),
                         width: 1.5,
                       ),
                     ),
@@ -465,9 +465,9 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0),
-                            Colors.white.withOpacity(0.3),
-                            Colors.white.withOpacity(0),
+                            Colors.white.withValues(alpha: 0),
+                            Colors.white.withValues(alpha: 0.3),
+                            Colors.white.withValues(alpha: 0),
                           ],
                         ),
                       ),
@@ -491,10 +491,10 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                               height: 80,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.2 + (_hoverAnimation.value * 0.2)),
+                                color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.2)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withOpacity(0.15 + (_hoverAnimation.value * 0.25)),
+                                    color: Colors.white.withValues(alpha: 0.15 + (_hoverAnimation.value * 0.25)),
                                     blurRadius: 25 + (_hoverAnimation.value * 20),
                                     spreadRadius: 5 + (_hoverAnimation.value * 8),
                                   ),
@@ -530,7 +530,7 @@ class _HeroCardState extends State<HeroCard> with TickerProviderStateMixin {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w400,
                                 fontFamily: 'Poppins',
-                                color: Colors.white.withOpacity(0.75),
+                                color: Colors.white.withValues(alpha: 0.75),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -617,7 +617,7 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.backgroundColor.withOpacity(0.4 + (_hoverAnimation.value * 0.3)),
+                    color: widget.backgroundColor.withValues(alpha: 0.4 + (_hoverAnimation.value * 0.3)),
                     blurRadius: 40 + (_hoverAnimation.value * 35),
                     offset: Offset(0, 15 + (_hoverAnimation.value * 12)),
                     spreadRadius: 3 + (_hoverAnimation.value * 8),
@@ -635,11 +635,11 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                         end: Alignment.bottomRight,
                         colors: [
                           widget.backgroundColor,
-                          widget.backgroundColor.withOpacity(0.75),
+                          widget.backgroundColor.withValues(alpha: 0.75),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2 + (_hoverAnimation.value * 0.15)),
+                        color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.15)),
                         width: 1.5,
                       ),
                     ),
@@ -655,9 +655,9 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0),
-                            Colors.white.withOpacity(0.25),
-                            Colors.white.withOpacity(0),
+                            Colors.white.withValues(alpha: 0),
+                            Colors.white.withValues(alpha: 0.25),
+                            Colors.white.withValues(alpha: 0),
                           ],
                         ),
                       ),
@@ -679,10 +679,10 @@ class _FeatureCardState extends State<FeatureCard> with TickerProviderStateMixin
                               height: 72,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.2 + (_hoverAnimation.value * 0.2)),
+                                color: Colors.white.withValues(alpha: 0.2 + (_hoverAnimation.value * 0.2)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withOpacity(0.15 + (_hoverAnimation.value * 0.25)),
+                                    color: Colors.white.withValues(alpha: 0.15 + (_hoverAnimation.value * 0.25)),
                                     blurRadius: 20 + (_hoverAnimation.value * 18),
                                     spreadRadius: 4 + (_hoverAnimation.value * 7),
                                   ),

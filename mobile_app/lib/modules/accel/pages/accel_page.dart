@@ -5,6 +5,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../models/accel_sample.dart';
 import '../services/accel_service.dart';
 
+//Trigger Contributor
+
 class AccelPage extends StatefulWidget {
   const AccelPage({super.key});
 
@@ -117,9 +119,9 @@ class _AccelPageState extends State<AccelPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Column(
                     children: [
@@ -193,7 +195,7 @@ class _AccelPageState extends State<AccelPage> {
                       color: color,
                       barWidth: 2,
                       dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(show: true, color: color.withOpacity(0.05)),
+                      belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.05)),
                     ),
                   ],
                 ),
@@ -208,7 +210,7 @@ class _AccelPageState extends State<AccelPage> {
   Widget _buildDivider() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(color: Colors.white.withOpacity(0.1), height: 1),
+      child: Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
     );
   }
 
