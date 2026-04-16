@@ -9,12 +9,13 @@ class DeviceService {
   /// Generated once and stored in SharedPreferences.
   static Future<String> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString(_keyUserId);
-    if (userId == null) {
-      userId = 'USR-${const Uuid().v4().substring(0, 8).toUpperCase()}';
-      await prefs.setString(_keyUserId, userId);
-    }
-    return userId;
+    return prefs.getString(_keyUserId) ?? 'MAHASISWA-TAMU';
+  }
+
+  /// Manually set the user ID (NIM).
+  static Future<void> setUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserId, userId);
   }
 
   /// Returns a persistent unique device ID for this device.
