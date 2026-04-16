@@ -1,7 +1,14 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
 import '../../../core/services/api_service.dart';
 
 class GpsMapPage extends StatefulWidget {
@@ -14,54 +21,114 @@ class GpsMapPage extends StatefulWidget {
 class _GpsMapPageState extends State<GpsMapPage> {
   final MapController _mapController = MapController();
 
-  // Posisi awal
   LatLng _latestPosition = const LatLng(-7.2575, 112.7521);
+  LatLng? _latestServerPosition;
+
   double _currentAccuracy = 0.0;
+
   bool _isLoadingLocation = false;
+  bool _isTrackingBusy = false;
 
-  // Pastikan device_id konsisten antara POST dan GET
-  final String _deviceId = "infinix-alip-01";
+  String _deviceId = "initializing-device";
 
-  // Ubah history menjadi list dinamis (awalnya kosong)
   List<LatLng> _historyPositions = [];
+
+  Timer? _trackingTimer;
+
+  bool _isFirstCenter = true;
+
+  final Distance _distance = const Distance();
+
+  static const int _historyLimit = 200;
+
+  // 🔥 TAMBAHAN: MULTI DEVICE STATE
+  List<Map<String, dynamic>> _allDevices = [];
+
+  final Color emeraldGreen = const Color(0xFF10B981);
+  final Color deepEmerald = const Color(0xFF059669);
 
   @override
   void initState() {
     super.initState();
-    // 1. Langsung ambil lokasi dan fetch data server saat halaman pertama kali dibuka
-    _initData();
+    _initializeDeviceAndStart();
   }
 
-  // Fungsi pembungkus agar eksekusinya rapi
+  @override
+  void dispose() {
+    _trackingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initializeDeviceAndStart() async {
+    _deviceId = await _getDeviceId();
+    await _initData();
+    _startAutoTracking();
+  }
+
+  Future<String> _getDeviceId() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        if (android.id.isNotEmpty) return "android-${android.id}";
+      }
+      if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        if (ios.identifierForVendor != null) return "ios-${ios.identifierForVendor}";
+      }
+    } catch (_) {}
+
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString("device_uuid");
+    if (stored != null) return stored;
+
+    final uuid = const Uuid().v4();
+    await prefs.setString("device_uuid", uuid);
+    return uuid;
+  }
+
   Future<void> _initData() async {
     await _getCurrentLocation();
+    await _fetchLatestGps();
     await _fetchGpsHistory();
   }
 
-  // --- FUNGSI MENDAPATKAN LOKASI ASLI ---
+  void _startAutoTracking() {
+    _trackingTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (timer) async {
+        if (_isTrackingBusy) return;
+        _isTrackingBusy = true;
+        try {
+          await _getCurrentLocation();
+          await _postGpsData();
+          await _fetchLatestGps();
+          await _fetchGpsHistory();
+
+          // 🔥 TAMBAHAN: AMBIL SEMUA DEVICE
+          await _fetchAllDevices();
+
+        } finally {
+          _isTrackingBusy = false;
+        }
+      },
+    );
+  }
+
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
-
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) throw Exception('Layanan GPS (Lokasi) tidak aktif.');
+      if (!serviceEnabled) return;
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Izin lokasi ditolak pengguna.');
-        }
       }
-
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Izin lokasi ditolak permanen. Buka pengaturan HP.');
-      }
+      if (permission == LocationPermission.deniedForever) return;
 
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       setState(() {
@@ -69,212 +136,214 @@ class _GpsMapPageState extends State<GpsMapPage> {
         _currentAccuracy = position.accuracy;
         _isLoadingLocation = false;
       });
-
-      // Gerakkan kamera peta ke lokasi baru
-      _mapController.move(_latestPosition, 17.0);
     } catch (e) {
       setState(() => _isLoadingLocation = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      debugPrint("GPS error: $e");
     }
   }
 
-  // --- FUNGSI MENGAMBIL HISTORY DARI SERVER ---
-  // --- FUNGSI MENGAMBIL HISTORY DARI SERVER ---
-  Future<void> _fetchGpsHistory() async {
+  Future<void> _fetchLatestGps() async {
     try {
-      // Panggil method getGpsHistory langsung dari ApiService
-      final response = await ApiService.getGpsHistory(_deviceId, limit: 50);
-      
+      final response = await ApiService.getGpsLatest(_deviceId);
       if (!mounted) return;
-
       if (response['ok'] == true) {
         final data = response['data'];
-        
-        // Cek apakah data adalah List langsung atau dibungkus dalam key 'items'
-        final List<dynamic> items = data is List ? data : (data['items'] ?? []);
+        final lat = double.tryParse(data['lat'].toString()) ?? 0.0;
+        final lng = double.tryParse(data['lng'].toString()) ?? 0.0;
+        final latest = LatLng(lat, lng);
 
-        List<LatLng> fetchedPositions = [];
-        
+        setState(() => _latestServerPosition = latest);
+
+        if (_isFirstCenter) {
+          _mapController.move(latest, 17);
+          _isFirstCenter = false;
+        }
+      }
+    } catch (e) {
+      debugPrint("Latest GPS fetch error: $e");
+    }
+  }
+
+  Future<void> _fetchGpsHistory() async {
+    try {
+      final response = await ApiService.getGpsHistory(_deviceId, limit: _historyLimit);
+      if (!mounted) return;
+      if (response['ok'] == true) {
+        final data = response['data'];
+        final List<dynamic> items = data is List ? data : (data['items'] ?? []);
+        List<LatLng> filtered = [];
         for (var item in items) {
           final lat = double.tryParse(item['lat'].toString()) ?? 0.0;
           final lng = double.tryParse(item['lng'].toString()) ?? 0.0;
-          fetchedPositions.add(LatLng(lat, lng));
+          final point = LatLng(lat, lng);
+          if (filtered.isEmpty) {
+            filtered.add(point);
+          } else {
+            final dist = _distance.as(LengthUnit.Meter, filtered.last, point);
+            if (dist > 3) filtered.add(point);
+          }
         }
-
-        setState(() {
-          _historyPositions = fetchedPositions;
-        });
+        setState(() => _historyPositions = filtered);
       }
     } catch (e) {
-      print("Error fetch GPS History: $e");
-      print("===== ERROR ASLI FLUTTER =====");
-      print(e.toString());
+      debugPrint("History GPS fetch error: $e");
     }
   }
 
-  // --- FUNGSI POST DATA GPS ---
+  // 🔥 TAMBAHAN: FETCH SEMUA DEVICE
+  Future<void> _fetchAllDevices() async {
+    try {
+      final response = await ApiService.getAllGps();
+      if (!mounted) return;
+
+      if (response['ok'] == true) {
+        final items = response['data']['items'] ?? [];
+        setState(() {
+          _allDevices = List<Map<String, dynamic>>.from(items);
+        });
+      }
+    } catch (e) {
+      debugPrint("Fetch ALL GPS error: $e");
+    }
+  }
+
   Future<void> _postGpsData() async {
     try {
-      // Panggil method postGps yang baru dibuat
-      final response = await ApiService.postGps(
+      final res = await ApiService.postGps(
         deviceId: _deviceId,
         lat: _latestPosition.latitude,
         lng: _latestPosition.longitude,
         accuracyM: _currentAccuracy,
       );
-      
-      if (!mounted) return;
 
-      if (response['ok'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Berhasil POST GPS ke Server!', style: TextStyle(color: Colors.white)),
-              backgroundColor: Colors.green),
-        );
-        _fetchGpsHistory(); // Refresh polyline
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Server Error: ${response['error']}'), backgroundColor: Colors.red),
-        );
-      }
+      print("POST GPS RESULT: $res"); 
     } catch (e) {
-      print("===== ERROR ASLI FLUTTER =====");
-      print(e.toString());
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengirim: $e')),
-      );
+      debugPrint("POST GPS error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final markerPosition = _latestServerPosition ?? _latestPosition;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Tracking GPS',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.indigo,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () {
-              _getCurrentLocation();
-              _fetchGpsHistory();
-            },
-            tooltip: 'Refresh Data',
-          )
-        ],
-      ),
       body: Stack(
         children: [
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: _latestPosition,
-              initialZoom: 17.0,
+              initialCenter: markerPosition,
+              initialZoom: 17,
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-                userAgentPackageName: 'com.example.mobile_app',
+                urlTemplate: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+                userAgentPackageName: "com.example.mobile_app",
               ),
+              
               PolylineLayer(
                 polylines: [
-                  // Tambahkan pengecekan if ini sebelum Polyline
                   if (_historyPositions.isNotEmpty)
                     Polyline(
-                        points: _historyPositions,
-                        color: Colors.blueAccent,
-                        strokeWidth: 5.0),
+                      points: _historyPositions,
+                      color: emeraldGreen.withValues(alpha: 0.7),
+                      strokeWidth: 5,
+                    ),
                 ],
               ),
+
               MarkerLayer(
                 markers: [
                   Marker(
                     point: _latestPosition,
-                    width: 60,
-                    height: 60,
-                    child: const Icon(Icons.location_history,
-                        color: Colors.redAccent, size: 45),
+                    width: 40, height: 40,
+                    child: Icon(Icons.person_pin_circle, color: Colors.blue.shade600, size: 35),
                   ),
+
+                  if (_latestServerPosition != null)
+                    Marker(
+                      point: _latestServerPosition!,
+                      width: 45, height: 45,
+                      child: Icon(Icons.location_on, color: deepEmerald, size: 40),
+                    ),
+
+                  // 🔥 TAMBAHAN: MULTI DEVICE MARKER
+                  ..._allDevices.map((device) {
+                    final lat = double.tryParse(device['lat'].toString()) ?? 0.0;
+                    final lng = double.tryParse(device['lng'].toString()) ?? 0.0;
+
+                    return Marker(
+                      point: LatLng(lat, lng),
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 35,
+                      ),
+                    );
+                  }).toList(),
                 ],
               ),
             ],
           ),
+
           Positioned(
-            top: 20,
-            left: 20,
-            right: 20,
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Status GPS Perangkat',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    const Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Lat:',
-                            style: TextStyle(color: Colors.grey)),
-                        Text('${_latestPosition.latitude}',
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Lng:',
-                            style: TextStyle(color: Colors.grey)),
-                        Text('${_latestPosition.longitude}',
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ],
+            top: 50, left: 20,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: Icon(Icons.arrow_back, color: deepEmerald),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 30, left: 20, right: 20,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [deepEmerald, emeraldGreen],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _coordItem("LATITUDE", _latestPosition.latitude.toStringAsFixed(6)),
+                  Container(width: 1, height: 30, color: Colors.white24),
+                  _coordItem("LONGITUDE", _latestPosition.longitude.toStringAsFixed(6)),
+                ],
               ),
             ),
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: "btn_location",
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.indigo,
-            onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-            child: _isLoadingLocation
-                ? const CircularProgressIndicator()
-                : const Icon(Icons.my_location),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton.extended(
-            heroTag: "btn_send",
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-            onPressed: _postGpsData,
-            icon: const Icon(Icons.cloud_upload),
-            label: const Text('Kirim GPS'),
-          ),
-        ],
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 125),
+        child: FloatingActionButton(
+          backgroundColor: Colors.white,
+          foregroundColor: deepEmerald,
+          onPressed: _isLoadingLocation ? null : _getCurrentLocation,
+          child: _isLoadingLocation
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.my_location),
+        ),
       ),
+    );
+  }
+
+  Widget _coordItem(String label, String value) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, fontFamily: 'monospace')),
+      ],
     );
   }
 }
