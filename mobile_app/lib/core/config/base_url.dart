@@ -1,5 +1,13 @@
+import 'base_url_store.dart';
+
 class AppConfig {
-  // Google Apps Script Web App URL (Versi A)
-  static const String baseUrl =
-      "https://script.google.com/macros/s/AKfycbxRb-vi3eQHHzVPT_Qvm7wgaAadxaTCiKgdBwahDZijqmeIU5do-tWZKbG7mfqhUwOv/exec";
+  static const String _defaultBaseUrl =
+      "https://script.google.com/macros/s/AKfycbzXQyqvnr1igO1MDW3E1_9t4w_HMb0BSJ54I-ukFHo1QNo8XCl63NncIQ3OLrD7aLdA/exec";
+
+  static String get baseUrl {
+    if (BaseUrlStore.url.isNotEmpty) {
+      return BaseUrlStore.url;
+    }
+    return _defaultBaseUrl;
+  }
 }

@@ -49,7 +49,7 @@ class _AccelAdminPageState extends State<AccelAdminPage> {
     _fetchHistoryData(); 
 
     // Polling setiap 5 detik
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _fetchHistoryData();
     });
   }

@@ -9,6 +9,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/device_service.dart';
 import '../../../core/services/api_service.dart';
 
 class GpsMapPage extends StatefulWidget {
@@ -60,31 +61,9 @@ class _GpsMapPageState extends State<GpsMapPage> {
   }
 
   Future<void> _initializeDeviceAndStart() async {
-    _deviceId = await _getDeviceId();
+    _deviceId = await DeviceService.getDeviceId();
     await _initData();
     _startAutoTracking();
-  }
-
-  Future<String> _getDeviceId() async {
-    try {
-      final deviceInfo = DeviceInfoPlugin();
-      if (Platform.isAndroid) {
-        final android = await deviceInfo.androidInfo;
-        if (android.id.isNotEmpty) return "android-${android.id}";
-      }
-      if (Platform.isIOS) {
-        final ios = await deviceInfo.iosInfo;
-        if (ios.identifierForVendor != null) return "ios-${ios.identifierForVendor}";
-      }
-    } catch (_) {}
-
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getString("device_uuid");
-    if (stored != null) return stored;
-
-    final uuid = const Uuid().v4();
-    await prefs.setString("device_uuid", uuid);
-    return uuid;
   }
 
   Future<void> _initData() async {
@@ -209,16 +188,18 @@ class _GpsMapPageState extends State<GpsMapPage> {
 
   Future<void> _postGpsData() async {
     try {
+      final userId = await DeviceService.getUserId();
       final res = await ApiService.postGps(
+        userId: userId,
         deviceId: _deviceId,
         lat: _latestPosition.latitude,
         lng: _latestPosition.longitude,
         accuracyM: _currentAccuracy,
       );
 
-      print("POST GPS RESULT: $res"); 
+      print("POST GPS RESULT (MAP): $res"); 
     } catch (e) {
-      debugPrint("POST GPS error: $e");
+      debugPrint("POST GPS error (MAP): $e");
     }
   }
 

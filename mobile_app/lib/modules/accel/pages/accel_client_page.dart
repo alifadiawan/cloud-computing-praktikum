@@ -98,7 +98,7 @@ void _startRecording() {
     });
 
     // Kirim data setiap 5 detik
-    _batchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _batchTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_batchSamples.isNotEmpty) _sendBatchData();
     });
   }
