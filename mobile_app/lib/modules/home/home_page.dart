@@ -5,6 +5,7 @@ import '../../screens/login_page.dart';
 // import '../accel/pages/accel_page.dart';
 import '../gps/pages/gps_map_page.dart';
 import '../accel/pages/accel_mode_page.dart';
+import '../../core/config/base_url_store.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +15,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  // ================= SWAP TEST =================
+final TextEditingController _baseUrlController = TextEditingController();
+
+void _applyBaseUrl() {
+  setState(() {
+    BaseUrlStore.url = _baseUrlController.text.trim();
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Base URL berhasil diganti")),
+  );
+}
+// ============================================
   late AnimationController _controller1;
   late AnimationController _controller2;
   late AnimationController _controller3;
@@ -64,6 +78,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _controller2.dispose();
     _controller3.dispose();
     _floatingController.dispose();
+     _baseUrlController.dispose();
     super.dispose();
   }
 
@@ -158,6 +173,72 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    /// ===== SWAP TEST INPUT =====
+FadeInUp(
+  animation: _animation1,
+  child: Container(
+    padding: const EdgeInsets.all(16),
+    margin: const EdgeInsets.only(bottom: 20),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white.withValues(alpha: 0.05),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.1),
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Swap Test (Base URL)",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _baseUrlController,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: "Masukkan link /exec kelompok lain",
+            hintStyle: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: _applyBaseUrl,
+              child: const Text("Apply"),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                BaseUrlStore.url.isEmpty
+                    ? "Belum ada URL"
+                    : BaseUrlStore.url,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          ],
+        ),
+      ],
+    ),
+  ),
+),
                     /// Welcome header
                     FadeInUp(
                       animation: _animation1,
@@ -776,4 +857,5 @@ class FadeInUp extends StatelessWidget {
       child: child,
     );
   }
+
 }
